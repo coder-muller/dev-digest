@@ -1,0 +1,13 @@
+# Credenciais
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Estado local da automação
+state.json
+
+# macOS
+.DS_Store
