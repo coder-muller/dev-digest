@@ -1,10 +1,11 @@
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")  # .env in the project root
 
 # Check required environment variables
 REQUIRED = ["GITHUB_USERNAME", "GITHUB_TOKEN", "AI_GATEWAY_API_KEY", "DISCORD_WEBHOOK_URL"]

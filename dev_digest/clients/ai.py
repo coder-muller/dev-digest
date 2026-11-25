@@ -1,7 +1,7 @@
 import json
 import re
 import requests
-import config
+from dev_digest import config
 
 API_URL = "https://ai-gateway.vercel.sh/v1/chat/completions"  # OpenAI-compatible API
 TIMEOUT_SECONDS = 30

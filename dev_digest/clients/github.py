@@ -1,5 +1,5 @@
 import requests
-import config
+from dev_digest import config
 
 API_URL = "https://api.github.com"
 HEADERS = {

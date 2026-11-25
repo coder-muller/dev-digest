@@ -1,6 +1,6 @@
 import time
 import requests
-import config
+from dev_digest import config
 
 TIMEOUT_SECONDS = 15
 MAX_EMBEDS_PER_MESSAGE = 10  # Discord limit

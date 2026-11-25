@@ -1,7 +1,7 @@
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 
-import config
+from dev_digest import config
 
 
 # Compares current data with the last run and returns what changed

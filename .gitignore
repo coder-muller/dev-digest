@@ -7,7 +7,7 @@ __pycache__/
 .venv/
 
 # Estado local da automação
-state.json
+data/
 
 # macOS
 .DS_Store
