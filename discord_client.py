@@ -4,6 +4,8 @@ import config
 
 TIMEOUT_SECONDS = 15
 MAX_EMBEDS_PER_MESSAGE = 10  # Discord limit
+MAX_LIST_ITEMS = 5
+DIGEST_COLOR = 0xF1C40F  # yellow
 
 TITLES = {
     "new_issue": "📬 Nova issue",
@@ -22,10 +24,10 @@ class DiscordError(Exception):
     pass
 
 
-# One colored card (embed) per event
-def build_embed(event):
+# One colored card (embed) per event, with an optional AI description
+def build_embed(event, description=None):
     item = event["item"]
-    return {
+    embed = {
         "title": f"{TITLES[event['type']]}: {item['title']}"[:256],  # Discord title limit
         "url": item["url"],
         "color": COLORS[event["type"]],
@@ -34,6 +36,47 @@ def build_embed(event):
             {"name": "Autor", "value": item["author"], "inline": True},
         ],
     }
+    if description:
+        embed["description"] = description[:4096]  # Discord description limit
+    return embed
+
+
+# Morning digest card: AI intro on top, then one field per section
+def build_digest_embed(digest, intro, date_label):
+    sections = [
+        ("✅ Prontas para merge", digest["ready"]),
+        ("⚠️ Com conflito", digest["conflict"]),
+        ("👀 Pedem sua revisão", digest["review_requested"]),
+        ("📬 Issues novas (24h)", digest["new_issues"]),
+        (f"💤 PRs paradas há mais de {config.STALE_PR_DAYS} dias", digest["stale"]),
+    ]
+    fields = [
+        {"name": f"{title} ({len(items)})", "value": _item_list(items)}
+        for title, items in sections
+        if items  # skip empty sections
+    ]
+
+    if digest["issues_by_repo"]:
+        top_repos = " · ".join(f"{repo.split('/')[1]} {count}" for repo, count in digest["issues_by_repo"])
+        fields.append({"name": f"📊 Issues abertas ({digest['total_issues']})", "value": top_repos})
+
+    return {
+        "title": f"☀️ Resumo do dia · {date_label}",
+        "description": intro[:4096],
+        "color": DIGEST_COLOR,
+        "fields": fields,
+    }
+
+
+# Clickable list of up to 5 items for an embed field
+def _item_list(items):
+    lines = [
+        f"[{item['repo'].split('/')[1]}#{item['number']}]({item['url']}) {item['title'][:50]}"
+        for item in items[:MAX_LIST_ITEMS]
+    ]
+    if len(items) > MAX_LIST_ITEMS:
+        lines.append(f"…e mais {len(items) - MAX_LIST_ITEMS}")
+    return "\n".join(lines)[:1024]  # Discord field limit
 
 
 # Sends the embeds, split into messages of up to 10
