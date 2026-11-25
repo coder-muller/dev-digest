@@ -1,10 +1,13 @@
 import sys
 
+import analyzer
+import discord_client
 import github_client
+import state
 
 
-# Step 1: fetch data from GitHub and print it
-def main():
+# Step 2: find what changed since the last run and alert on Discord
+def check():
     try:
         prs = github_client.fetch_open_prs()
         issues = github_client.fetch_open_issues()
@@ -12,14 +15,24 @@ def main():
         print(f"Erro ao buscar dados no GitHub: {error}")
         sys.exit(1)
 
-    print(f"{len(prs)} PRs abertas:")
-    for pr in prs:
-        print(f"  {pr['repo']} #{pr['number']} [{pr['mergeable_state']}] {pr['title']}")
+    previous = state.load()
+    events = analyzer.find_events(prs, issues, previous)
 
-    print(f"\n{len(issues)} issues abertas:")
-    for issue in issues:
-        print(f"  {issue['repo']} #{issue['number']} {issue['title']}")
+    if previous is None:
+        print("Primeira execução: estado salvo, nenhum alerta enviado.")
+    elif events:
+        try:
+            discord_client.send_embeds([discord_client.build_embed(event) for event in events])
+        except discord_client.DiscordError as error:
+            # State is not saved, so these alerts are retried on the next run
+            print(f"Erro ao enviar para o Discord: {error}")
+            sys.exit(1)
+        print(f"{len(events)} alerta(s) enviado(s) para o Discord.")
+    else:
+        print("Nada novo.")
+
+    state.save(analyzer.build_state(prs, issues, previous))
 
 
 if __name__ == "__main__":
-    main()
+    check()
