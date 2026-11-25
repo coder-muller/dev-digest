@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 
 from dotenv import load_dotenv
 
@@ -27,7 +28,10 @@ AI_MODEL = os.getenv("AI_MODEL", "google/gemini-2.5-flash")
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
 # Other settings
-DIGEST_TIME = os.getenv("DIGEST_TIME", "08:00")
+try:
+    DIGEST_TIME = datetime.strptime(os.getenv("DIGEST_TIME", "08:00"), "%H:%M").time()  # "08:00" -> time(8, 0)
+except ValueError:
+    sys.exit("DIGEST_TIME inválido no .env (use HH:MM, ex.: 08:00)")
 TIMEZONE = os.getenv("TIMEZONE", "America/Sao_Paulo")
 CHECK_INTERVAL_MINUTES = int(os.getenv("CHECK_INTERVAL_MINUTES", "2"))
 STALE_PR_DAYS = int(os.getenv("STALE_PR_DAYS", "7"))
